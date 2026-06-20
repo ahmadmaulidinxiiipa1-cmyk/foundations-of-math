@@ -48,7 +48,7 @@ function IntiContent() {
 
   if (!materi) {
     return (
-      <main className="min-h-screen bg-emerald-50 flex flex-col items-center justify-center p-4 text-center">
+      <main className="min-h-screen bg-emerald-50 flex flex-col items-center justify-center p-4 pt-28 text-center">
         <div className="bg-white border-4 border-slate-900 p-8 rounded-3xl max-w-sm shadow-[8px_8px_0_0_rgba(15,23,42,1)]">
           <div className="text-6xl mb-4">🏜️</div>
           <h2 className="text-2xl font-black text-slate-900">Materi Belum Siap</h2>
@@ -60,20 +60,22 @@ function IntiContent() {
   }
 
   return (
-    <main className="min-h-screen bg-emerald-50 p-4 md:p-6 font-sans flex flex-col items-center py-20 relative">
+    // Menggunakan pt-28 dan left-4 agar seragam dan kokoh di layar mobile manapun
+    <main className="min-h-screen bg-emerald-50 p-4 pt-28 md:p-6 md:pt-24 font-sans flex flex-col items-center relative overflow-x-hidden overflow-y-auto">
       
+      {/* Tombol Kembali (left-4 untuk HP) */}
       <button 
         onClick={tanganiKembali} 
-        className="absolute top-6 left-4 md:left-6 z-50 bg-white border-4 border-slate-900 px-4 py-2 rounded-xl font-black text-slate-900 shadow-[4px_4px_0_0_rgba(15,23,42,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all flex items-center gap-2 text-sm md:text-base"
+        className="absolute top-6 left-4 md:left-6 z-50 bg-white border-4 border-slate-900 px-4 py-2 rounded-xl font-black text-slate-900 shadow-[4px_4px_0_0_rgba(15,23,42,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all flex items-center gap-2 text-sm md:text-base cursor-pointer"
       >
-        <span>⬅️</span> <span className="hidden md:inline">Kembali</span>
+        <span>⬅️</span> <span>Kembali</span>
       </button>
 
-      <div className="w-full max-w-4xl z-10 space-y-6">
+      <div className="w-full max-w-4xl z-10 space-y-6 mt-4 md:mt-0">
         
         <div className="text-center">
           <h1 className="text-3xl md:text-5xl font-black text-slate-900 mb-2 leading-tight">{materi.judul}</h1>
-          <p className="font-black text-pink-500 text-sm md:text-base bg-pink-50 px-4 py-1.5 rounded-xl border-2 border-pink-300 inline-block mt-2 break-words">
+          <p className="font-black text-pink-500 text-sm md:text-base bg-pink-50 px-4 py-1.5 rounded-xl border-2 border-pink-300 inline-block mt-2 break-words shadow-[2px_2px_0_0_rgba(15,23,42,1)]">
             📂 {bab} ➔ {subbab} ({jenjang})
           </p>
         </div>
@@ -111,7 +113,6 @@ function IntiContent() {
             </div>
           )}
 
-          {/* PERBAIKAN: Pisahkan Container Embed Video dan Container Fallback Biasa */}
           {metode === "Video" && (materi.link.includes("youtube.com") || materi.link.includes("youtu.be")) ? (
             <div className="w-full aspect-video bg-slate-900 rounded-xl border-4 border-slate-900 overflow-hidden relative shadow-[4px_4px_0_0_rgba(15,23,42,1)]">
               <iframe 
