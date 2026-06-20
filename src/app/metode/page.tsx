@@ -8,19 +8,18 @@ function MetodeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  // Mengambil data "jenjang" dari alamat URL (yang dikirim dari Halaman 3)
   const jenjang = searchParams.get("jenjang") || "Umum";
 
-  // Fungsi untuk lanjut ke Halaman Bab sambil membawa data Jenjang & Metode
   const pilihMetode = (metode: string) => {
     router.push(`/bab?jenjang=${jenjang}&metode=${metode}`);
   };
 
   return (
-    <main className="min-h-screen bg-purple-50 p-4 md:p-6 relative overflow-hidden font-sans flex flex-col items-center justify-center">
+    // Tambahan pt-28 (padding top) agar konten sangat aman dari tombol di layar HP
+    <main className="min-h-screen bg-purple-50 p-4 pt-28 md:p-6 md:pt-24 relative overflow-x-hidden overflow-y-auto font-sans flex flex-col items-center justify-center">
       
-      {/* Tombol Kembali (Aman, mengarah balik ke dasbor) */}
-      <Link href="/dasbor" className="absolute top-6 left-6 z-50 bg-white border-4 border-slate-900 px-4 py-2 rounded-xl font-black text-slate-900 shadow-[4px_4px_0_0_rgba(15,23,42,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all flex items-center gap-2">
+      {/* Tombol Kembali (Posisi disesuaikan jadi left-4 di HP) */}
+      <Link href="/dasbor" className="absolute top-6 left-4 md:left-6 z-50 bg-white border-4 border-slate-900 px-4 py-2 rounded-xl font-black text-slate-900 shadow-[4px_4px_0_0_rgba(15,23,42,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all flex items-center gap-2">
         <span>⬅️</span> <span className="hidden md:inline">Kembali</span>
       </Link>
 
@@ -28,11 +27,11 @@ function MetodeContent() {
       <div className="absolute top-10 right-10 text-6xl opacity-30 animate-bounce">🎨</div>
       <div className="absolute bottom-20 left-10 text-7xl opacity-30 animate-pulse">🎧</div>
 
-      {/* Kotak Utama */}
-      <div className="bg-white border-4 md:border-8 border-slate-900 p-6 md:p-10 rounded-3xl md:rounded-[3rem] w-full max-w-md md:max-w-4xl text-center shadow-[8px_8px_0_0_rgba(15,23,42,1)] md:shadow-[12px_12px_0_0_rgba(15,23,42,1)] z-10 relative">
+      {/* Kotak Utama - Tambahan mt-6 untuk memberi jarak ekstra dari atas */}
+      <div className="bg-white border-4 md:border-8 border-slate-900 p-6 md:p-10 rounded-3xl md:rounded-[3rem] w-full max-w-md md:max-w-4xl text-center shadow-[8px_8px_0_0_rgba(15,23,42,1)] md:shadow-[12px_12px_0_0_rgba(15,23,42,1)] z-10 relative mt-6 md:mt-0">
         
-        {/* Label Jenjang yang Dibawa dari Halaman Sebelumnya */}
-        <div className="inline-block bg-pink-200 border-4 border-slate-900 px-4 py-1.5 rounded-xl font-black text-slate-900 mb-4 -rotate-2">
+        {/* Label Jenjang */}
+        <div className="inline-block bg-pink-200 border-4 border-slate-900 px-4 py-1.5 rounded-xl font-black text-slate-900 mb-6 -rotate-2 shadow-[2px_2px_0_0_rgba(15,23,42,1)]">
           Target Materi: {jenjang} 🎓
         </div>
 
@@ -62,7 +61,6 @@ function MetodeContent() {
             <p className="text-xs font-bold mt-1 opacity-80 text-center">Praktek peraga digital</p>
           </button>
 
-          {/* Tombol yang belum aktif (Coming Soon) */}
           <button disabled className="bg-slate-100 text-slate-400 p-6 rounded-2xl border-4 border-slate-300 transition-all cursor-not-allowed flex flex-col items-center">
             <div className="text-5xl mb-3 grayscale opacity-50">🎧</div>
             <h2 className="text-xl font-black">Podcast</h2>
@@ -75,7 +73,6 @@ function MetodeContent() {
   );
 }
 
-// Next.js butuh fungsi utama dibungkus Suspense kalau pakai useSearchParams
 export default function MetodePage() {
   return (
     <Suspense fallback={<div className="min-h-screen bg-purple-50 flex justify-center items-center font-black text-2xl">Memuat... ⏳</div>}>

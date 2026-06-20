@@ -9,35 +9,25 @@ function IntiContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  // Menarik seluruh jejak pilihan siswa dari URL
   const jenjang = searchParams.get("jenjang") || "Umum";
   const metode = searchParams.get("metode") || "Video";
   const bab = searchParams.get("bab") || "Umum";
   const subbab = searchParams.get("subbab") || "Umum";
 
-  // State Halaman
   const [materi, setMateri] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [porsi, setPorsi] = useState("Sedang"); // State Porsi: Singkat / Sedang / Panjang
+  const [porsi, setPorsi] = useState("Sedang"); 
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "materi_belajar"), (snapshot) => {
       const data = snapshot.docs.map(doc => doc.data());
-      
-      // Filter super spesifik untuk mencari 1 materi inti
-      const materiDitemukan = data.find(m => 
-        m.format === metode && 
-        m.mapel === bab && 
-        (m.bab || "Umum") === subbab
-      );
-      
+      const materiDitemukan = data.find(m => m.format === metode && m.mapel === bab && (m.bab || "Umum") === subbab);
       setMateri(materiDitemukan || null);
       setLoading(false);
     });
     return () => unsub();
   }, [metode, bab, subbab]);
 
-  // Fungsi mengubah link YouTube biasa menjadi Link Embed agar bisa diputar di dalam Web
   const dapatkanEmbedYoutube = (url: string) => {
     if (!url) return "";
     let regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
@@ -72,25 +62,23 @@ function IntiContent() {
   return (
     <main className="min-h-screen bg-emerald-50 p-4 md:p-6 font-sans flex flex-col items-center py-20 relative">
       
-      {/* Tombol Kembali ke Sub-bab */}
       <button 
         onClick={tanganiKembali} 
-        className="absolute top-6 left-6 z-50 bg-white border-4 border-slate-900 px-4 py-2 rounded-xl font-black text-slate-900 shadow-[4px_4px_0_0_rgba(15,23,42,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all flex items-center gap-2 cursor-pointer text-sm md:text-base"
+        className="absolute top-6 left-4 md:left-6 z-50 bg-white border-4 border-slate-900 px-4 py-2 rounded-xl font-black text-slate-900 shadow-[4px_4px_0_0_rgba(15,23,42,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all flex items-center gap-2 text-sm md:text-base"
       >
-        <span>⬅️</span> <span>Kembali</span>
+        <span>⬅️</span> <span className="hidden md:inline">Kembali</span>
       </button>
 
       <div className="w-full max-w-4xl z-10 space-y-6">
         
-        {/* Header Ruang Belajar */}
         <div className="text-center">
           <h1 className="text-3xl md:text-5xl font-black text-slate-900 mb-2 leading-tight">{materi.judul}</h1>
-          <p className="font-black text-pink-500 text-sm md:text-base bg-pink-50 px-4 py-1.5 rounded-xl border-2 border-pink-300 inline-block mt-2">
+          <p className="font-black text-pink-500 text-sm md:text-base bg-pink-50 px-4 py-1.5 rounded-xl border-2 border-pink-300 inline-block mt-2 break-words">
             📂 {bab} ➔ {subbab} ({jenjang})
           </p>
         </div>
 
-        {/* TAB PILIHAN PORSI MATERI (Student-Centered Learning) */}
+        {/* TAB PILIHAN PORSI */}
         <div className="bg-white border-4 border-slate-900 p-2 rounded-2xl max-w-md mx-auto grid grid-cols-3 gap-2 shadow-[4px_4px_0_0_rgba(15,23,42,1)]">
           {["Singkat", "Sedang", "Detail"].map((p) => (
             <button 
@@ -103,56 +91,55 @@ function IntiContent() {
           ))}
         </div>
 
-        {/* AREA INTI KONTEN UTAMA */}
-        <div className="bg-white border-4 md:border-8 border-slate-900 rounded-[2rem] p-4 md:p-6 shadow-[8px_8px_0_0_rgba(15,23,42,1)] md:shadow-[12px_12px_0_0_rgba(15,23,42,1)] overflow-hidden">
+        {/* AREA INTI */}
+        <div className="bg-white border-4 md:border-8 border-slate-900 rounded-[2rem] p-4 md:p-6 shadow-[8px_8px_0_0_rgba(15,23,42,1)] md:shadow-[12px_12px_0_0_rgba(15,23,42,1)]">
           
-          {/* Tampilan Kondisional Berdasarkan Porsi yang Dipilih */}
           {porsi === "Singkat" && (
             <div className="bg-yellow-50 border-4 border-dashed border-yellow-400 p-4 rounded-2xl mb-4 font-bold text-slate-700 text-sm md:text-base leading-relaxed">
               🚀 <span className="font-black text-slate-900">Rangkuman Kilat (1-2 Menit):</span>
               <ul className="list-disc pl-5 mt-2 space-y-1">
                 <li>Fokus pada inti rumus utama dan konsep kilat.</li>
                 <li>Gunakan visualisasi dasar untuk pemahaman cepat.</li>
-                <li>Tonton video utama di bawah bagian poin-poin penting ini!</li>
               </ul>
             </div>
           )}
 
           {porsi === "Detail" && (
             <div className="bg-purple-50 border-4 border-dashed border-purple-400 p-4 rounded-2xl mb-4 font-bold text-slate-700 text-sm md:text-base leading-relaxed">
-              🧠 <span className="font-black text-slate-900">Kupas Tuntas Rumus & Contoh Soal Lengkap:</span>
+              🧠 <span className="font-black text-slate-900">Kupas Tuntas Materi:</span>
               <p className="mt-1">Sangat disarankan untuk mencatat pembuktian rumus dan trik pengerjaan yang ada di dalam materi penuh di bawah ini.</p>
             </div>
           )}
 
-          {/* AREA BOX PLAYER / TAMPILAN MEDIA */}
-          <div className="w-full aspect-video bg-slate-900 rounded-xl border-4 border-slate-900 overflow-hidden relative shadow-[4px_4px_0_0_rgba(15,23,42,1)]">
-            {metode === "Video" && materi.link.includes("youtube.com") || materi.link.includes("youtu.be") ? (
+          {/* PERBAIKAN: Pisahkan Container Embed Video dan Container Fallback Biasa */}
+          {metode === "Video" && (materi.link.includes("youtube.com") || materi.link.includes("youtu.be")) ? (
+            <div className="w-full aspect-video bg-slate-900 rounded-xl border-4 border-slate-900 overflow-hidden relative shadow-[4px_4px_0_0_rgba(15,23,42,1)]">
               <iframe 
                 src={dapatkanEmbedYoutube(materi.link)} 
                 title={materi.judul}
-                className="w-full h-full"
+                className="w-full h-full absolute inset-0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                 allowFullScreen
               ></iframe>
-            ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-slate-800 text-white">
-                <span className="text-5xl mb-2">{metode === "Artikel" ? "📄" : "⚙️"}</span>
-                <p className="font-black text-lg md:text-xl mb-4">Materi siap dipelajari secara interaktif!</p>
-                <a 
-                  href={materi.link} 
-                  target="_blank" 
-                  rel="noreferrer" 
-                  className="bg-green-400 hover:bg-green-500 text-slate-900 font-black px-6 py-3 rounded-xl border-4 border-slate-900 shadow-[4px_4px_0_0_rgba(15,23,42,1)] active:shadow-none active:translate-y-1 transition-all uppercase text-sm"
-                >
-                  Buka {metode} Sekarang 🚀
-                </a>
-              </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="w-full min-h-[250px] bg-slate-800 rounded-xl border-4 border-slate-900 flex flex-col items-center justify-center p-6 md:p-10 text-center shadow-[4px_4px_0_0_rgba(15,23,42,1)]">
+              <span className="text-5xl mb-4">{metode === "Artikel" ? "📄" : "⚙️"}</span>
+              <p className="font-black text-lg md:text-xl mb-6 text-white leading-snug">Materi siap dipelajari secara interaktif!</p>
+              <a 
+                href={materi.link} 
+                target="_blank" 
+                rel="noreferrer" 
+                className="bg-green-400 hover:bg-green-500 text-slate-900 font-black px-6 py-4 rounded-xl border-4 border-slate-900 shadow-[4px_4px_0_0_rgba(15,23,42,1)] active:shadow-none active:translate-y-1 transition-all uppercase text-sm flex items-center justify-center gap-2 w-full max-w-xs mx-auto"
+              >
+                <span>Buka {metode}</span> <span className="text-lg">🚀</span>
+              </a>
+            </div>
+          )}
+
         </div>
 
-        {/* SEKSI KUIS MANDIRI (Asynchronous Learning) */}
+        {/* SEKSI KUIS MANDIRI */}
         <div className="bg-yellow-100 border-4 border-slate-900 p-6 rounded-3xl shadow-[8px_8px_0_0_rgba(15,23,42,1)]">
           <h2 className="text-xl md:text-2xl font-black text-slate-900 mb-2 flex items-center gap-2">
             <span>🎮</span> Uji Pemahamanmu! (Kuis Mandiri)
@@ -162,35 +149,30 @@ function IntiContent() {
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            
-            {/* Kuis Santai */}
             <a 
-              href="https://blooket.com" // Tempat tautan kuis santai (Blooket/Wordwall)
+              href={materi.linkKuisSantai || "https://blooket.com"} 
               target="_blank" 
               rel="noreferrer" 
               className="bg-white hover:bg-orange-50 text-slate-900 p-4 rounded-2xl border-4 border-slate-900 shadow-[4px_4px_0_0_rgba(15,23,42,1)] active:shadow-none active:translate-y-1 transition-all flex items-center gap-3 group text-left"
             >
-              <div className="bg-orange-300 border-2 border-slate-900 w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-[2px_2px_0_0_rgba(15,23,42,1)] group-hover:rotate-12 transition-transform">🥳</div>
+              <div className="bg-orange-300 border-2 border-slate-900 w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-[2px_2px_0_0_rgba(15,23,42,1)] group-hover:rotate-12 transition-transform flex-shrink-0">🥳</div>
               <div>
-                <h3 className="font-black text-base md:text-lg">Kuis Santai (Mode Game)</h3>
-                <p className="text-xs font-bold text-slate-500">Main di Blooket / Wordwall</p>
+                <h3 className="font-black text-sm md:text-base">Kuis Santai (Game)</h3>
+                <p className="text-xs font-bold text-slate-500 mt-0.5">Blooket / Wordwall</p>
               </div>
             </a>
-
-            {/* Kuis Serius */}
             <a 
-              href="https://quizizz.com" // Tempat tautan kuis serius (Quizizz/Google Form)
+              href={materi.linkKuisSerius || "https://quizizz.com"} 
               target="_blank" 
               rel="noreferrer" 
               className="bg-white hover:bg-purple-50 text-slate-900 p-4 rounded-2xl border-4 border-slate-900 shadow-[4px_4px_0_0_rgba(15,23,42,1)] active:shadow-none active:translate-y-1 transition-all flex items-center gap-3 group text-left"
             >
-              <div className="bg-purple-300 border-2 border-slate-900 w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-[2px_2px_0_0_rgba(15,23,42,1)] group-hover:rotate-12 transition-transform">📝</div>
+              <div className="bg-purple-300 border-2 border-slate-900 w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-[2px_2px_0_0_rgba(15,23,42,1)] group-hover:rotate-12 transition-transform flex-shrink-0">📝</div>
               <div>
-                <h3 className="font-black text-base md:text-lg">Kuis Serius (Mode Fokus)</h3>
-                <p className="text-xs font-bold text-slate-500">Evaluasi Tenang di Quizizz / GForms</p>
+                <h3 className="font-black text-sm md:text-base">Kuis Serius (Fokus)</h3>
+                <p className="text-xs font-bold text-slate-500 mt-0.5">Quizizz / GForms</p>
               </div>
             </a>
-
           </div>
         </div>
 
