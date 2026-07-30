@@ -21,7 +21,8 @@ function IntiContent() {
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "materi_belajar"), (snapshot) => {
       const data = snapshot.docs.map(doc => doc.data());
-      const materiDitemukan = data.find(m => m.format === metode && m.mapel === bab && (m.bab || "Umum") === subbab);
+      // Filter super ketat: pastikan materi tersebut Aktif
+      const materiDitemukan = data.find(m => m.format === metode && m.mapel === bab && (m.bab || "Umum") === subbab && (m.status === "Aktif" || !m.status));
       setMateri(materiDitemukan || null);
       setLoading(false);
     });
@@ -60,19 +61,13 @@ function IntiContent() {
   }
 
   return (
-    // Menggunakan pt-28 dan left-4 agar seragam dan kokoh di layar mobile manapun
     <main className="min-h-screen bg-emerald-50 p-4 pt-28 md:p-6 md:pt-24 font-sans flex flex-col items-center relative overflow-x-hidden overflow-y-auto">
       
-      {/* Tombol Kembali (left-4 untuk HP) */}
-      <button 
-        onClick={tanganiKembali} 
-        className="absolute top-6 left-4 md:left-6 z-50 bg-white border-4 border-slate-900 px-4 py-2 rounded-xl font-black text-slate-900 shadow-[4px_4px_0_0_rgba(15,23,42,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all flex items-center gap-2 text-sm md:text-base cursor-pointer"
-      >
+      <button onClick={tanganiKembali} className="absolute top-6 left-4 md:left-6 z-50 bg-white border-4 border-slate-900 px-4 py-2 rounded-xl font-black text-slate-900 shadow-[4px_4px_0_0_rgba(15,23,42,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all flex items-center gap-2 text-sm md:text-base cursor-pointer">
         <span>⬅️</span> <span>Kembali</span>
       </button>
 
       <div className="w-full max-w-4xl z-10 space-y-6 mt-4 md:mt-0">
-        
         <div className="text-center">
           <h1 className="text-3xl md:text-5xl font-black text-slate-900 mb-2 leading-tight">{materi.judul}</h1>
           <p className="font-black text-pink-500 text-sm md:text-base bg-pink-50 px-4 py-1.5 rounded-xl border-2 border-pink-300 inline-block mt-2 break-words shadow-[2px_2px_0_0_rgba(15,23,42,1)]">
@@ -80,32 +75,21 @@ function IntiContent() {
           </p>
         </div>
 
-        {/* TAB PILIHAN PORSI */}
         <div className="bg-white border-4 border-slate-900 p-2 rounded-2xl max-w-md mx-auto grid grid-cols-3 gap-2 shadow-[4px_4px_0_0_rgba(15,23,42,1)]">
           {["Singkat", "Sedang", "Detail"].map((p) => (
-            <button 
-              key={p} 
-              onClick={() => setPorsi(p)} 
-              className={`py-2 text-xs md:text-sm font-black rounded-xl border-2 transition-all cursor-pointer ${porsi === p ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-transparent hover:bg-slate-100'}`}
-            >
+            <button key={p} onClick={() => setPorsi(p)} className={`py-2 text-xs md:text-sm font-black rounded-xl border-2 transition-all cursor-pointer ${porsi === p ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-700 border-transparent hover:bg-slate-100'}`}>
               {p === "Singkat" ? "⚡ Singkat" : p === "Sedang" ? "📚 Sedang" : "🧠 Detail"}
             </button>
           ))}
         </div>
 
-        {/* AREA INTI */}
         <div className="bg-white border-4 md:border-8 border-slate-900 rounded-[2rem] p-4 md:p-6 shadow-[8px_8px_0_0_rgba(15,23,42,1)] md:shadow-[12px_12px_0_0_rgba(15,23,42,1)]">
-          
           {porsi === "Singkat" && (
             <div className="bg-yellow-50 border-4 border-dashed border-yellow-400 p-4 rounded-2xl mb-4 font-bold text-slate-700 text-sm md:text-base leading-relaxed">
               🚀 <span className="font-black text-slate-900">Rangkuman Kilat (1-2 Menit):</span>
-              <ul className="list-disc pl-5 mt-2 space-y-1">
-                <li>Fokus pada inti rumus utama dan konsep kilat.</li>
-                <li>Gunakan visualisasi dasar untuk pemahaman cepat.</li>
-              </ul>
+              <ul className="list-disc pl-5 mt-2 space-y-1"><li>Fokus pada inti rumus utama dan konsep kilat.</li><li>Gunakan visualisasi dasar untuk pemahaman cepat.</li></ul>
             </div>
           )}
-
           {porsi === "Detail" && (
             <div className="bg-purple-50 border-4 border-dashed border-purple-400 p-4 rounded-2xl mb-4 font-bold text-slate-700 text-sm md:text-base leading-relaxed">
               🧠 <span className="font-black text-slate-900">Kupas Tuntas Materi:</span>
@@ -115,68 +99,34 @@ function IntiContent() {
 
           {metode === "Video" && (materi.link.includes("youtube.com") || materi.link.includes("youtu.be")) ? (
             <div className="w-full aspect-video bg-slate-900 rounded-xl border-4 border-slate-900 overflow-hidden relative shadow-[4px_4px_0_0_rgba(15,23,42,1)]">
-              <iframe 
-                src={dapatkanEmbedYoutube(materi.link)} 
-                title={materi.judul}
-                className="w-full h-full absolute inset-0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowFullScreen
-              ></iframe>
+              <iframe src={dapatkanEmbedYoutube(materi.link)} title={materi.judul} className="w-full h-full absolute inset-0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
             </div>
           ) : (
             <div className="w-full min-h-[250px] bg-slate-800 rounded-xl border-4 border-slate-900 flex flex-col items-center justify-center p-6 md:p-10 text-center shadow-[4px_4px_0_0_rgba(15,23,42,1)]">
               <span className="text-5xl mb-4">{metode === "Artikel" ? "📄" : "⚙️"}</span>
               <p className="font-black text-lg md:text-xl mb-6 text-white leading-snug">Materi siap dipelajari secara interaktif!</p>
-              <a 
-                href={materi.link} 
-                target="_blank" 
-                rel="noreferrer" 
-                className="bg-green-400 hover:bg-green-500 text-slate-900 font-black px-6 py-4 rounded-xl border-4 border-slate-900 shadow-[4px_4px_0_0_rgba(15,23,42,1)] active:shadow-none active:translate-y-1 transition-all uppercase text-sm flex items-center justify-center gap-2 w-full max-w-xs mx-auto"
-              >
+              <a href={materi.link} target="_blank" rel="noreferrer" className="bg-green-400 hover:bg-green-500 text-slate-900 font-black px-6 py-4 rounded-xl border-4 border-slate-900 shadow-[4px_4px_0_0_rgba(15,23,42,1)] active:shadow-none active:translate-y-1 transition-all uppercase text-sm flex items-center justify-center gap-2 w-full max-w-xs mx-auto">
                 <span>Buka {metode}</span> <span className="text-lg">🚀</span>
               </a>
             </div>
           )}
-
         </div>
 
-        {/* SEKSI KUIS MANDIRI */}
         <div className="bg-yellow-100 border-4 border-slate-900 p-6 rounded-3xl shadow-[8px_8px_0_0_rgba(15,23,42,1)]">
-          <h2 className="text-xl md:text-2xl font-black text-slate-900 mb-2 flex items-center gap-2">
-            <span>🎮</span> Uji Pemahamanmu! (Kuis Mandiri)
-          </h2>
-          <p className="font-bold text-slate-600 text-xs md:text-sm mb-4 leading-relaxed">
-            Pilih tipe tantangan di bawah untuk menguji seberapa hebat kamu menaklukkan bab ini tanpa perlu diawasi admin secara live!
-          </p>
+          <h2 className="text-xl md:text-2xl font-black text-slate-900 mb-2 flex items-center gap-2"><span>🎮</span> Uji Pemahamanmu!</h2>
+          <p className="font-bold text-slate-600 text-xs md:text-sm mb-4 leading-relaxed">Pilih tipe tantangan di bawah untuk menguji seberapa hebat kamu menaklukkan bab ini!</p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <a 
-              href={materi.linkKuisSantai || "https://blooket.com"} 
-              target="_blank" 
-              rel="noreferrer" 
-              className="bg-white hover:bg-orange-50 text-slate-900 p-4 rounded-2xl border-4 border-slate-900 shadow-[4px_4px_0_0_rgba(15,23,42,1)] active:shadow-none active:translate-y-1 transition-all flex items-center gap-3 group text-left"
-            >
+            <a href={materi.linkKuisSantai || "https://blooket.com"} target="_blank" rel="noreferrer" className="bg-white hover:bg-orange-50 text-slate-900 p-4 rounded-2xl border-4 border-slate-900 shadow-[4px_4px_0_0_rgba(15,23,42,1)] active:translate-y-1 transition-all flex items-center gap-3 group text-left">
               <div className="bg-orange-300 border-2 border-slate-900 w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-[2px_2px_0_0_rgba(15,23,42,1)] group-hover:rotate-12 transition-transform flex-shrink-0">🥳</div>
-              <div>
-                <h3 className="font-black text-sm md:text-base">Kuis Santai (Game)</h3>
-                <p className="text-xs font-bold text-slate-500 mt-0.5">Blooket / Wordwall</p>
-              </div>
+              <div><h3 className="font-black text-sm md:text-base">Kuis Santai (Game)</h3><p className="text-xs font-bold text-slate-500 mt-0.5">Blooket / Wordwall</p></div>
             </a>
-            <a 
-              href={materi.linkKuisSerius || "https://quizizz.com"} 
-              target="_blank" 
-              rel="noreferrer" 
-              className="bg-white hover:bg-purple-50 text-slate-900 p-4 rounded-2xl border-4 border-slate-900 shadow-[4px_4px_0_0_rgba(15,23,42,1)] active:shadow-none active:translate-y-1 transition-all flex items-center gap-3 group text-left"
-            >
+            <a href={materi.linkKuisSerius || "https://quizizz.com"} target="_blank" rel="noreferrer" className="bg-white hover:bg-purple-50 text-slate-900 p-4 rounded-2xl border-4 border-slate-900 shadow-[4px_4px_0_0_rgba(15,23,42,1)] active:translate-y-1 transition-all flex items-center gap-3 group text-left">
               <div className="bg-purple-300 border-2 border-slate-900 w-12 h-12 rounded-xl flex items-center justify-center text-2xl shadow-[2px_2px_0_0_rgba(15,23,42,1)] group-hover:rotate-12 transition-transform flex-shrink-0">📝</div>
-              <div>
-                <h3 className="font-black text-sm md:text-base">Kuis Serius (Fokus)</h3>
-                <p className="text-xs font-bold text-slate-500 mt-0.5">Quizizz / GForms</p>
-              </div>
+              <div><h3 className="font-black text-sm md:text-base">Kuis Serius (Fokus)</h3><p className="text-xs font-bold text-slate-500 mt-0.5">Quizizz / GForms</p></div>
             </a>
           </div>
         </div>
-
       </div>
     </main>
   );

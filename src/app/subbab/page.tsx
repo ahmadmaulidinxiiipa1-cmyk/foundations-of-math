@@ -19,7 +19,8 @@ function SubBabContent() {
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "materi_belajar"), (snapshot) => {
       const data = snapshot.docs.map(doc => doc.data());
-      const materiSesuai = data.filter(m => m.format === metode && m.mapel === bab);
+      // Menyaring materi yang sesuai metode, mapel, DAN berstatus Aktif
+      const materiSesuai = data.filter(m => m.format === metode && m.mapel === bab && (m.status === "Aktif" || !m.status));
       setMateriList(materiSesuai);
       setLoading(false);
     });
@@ -37,19 +38,12 @@ function SubBabContent() {
   };
 
   return (
-    // Menggunakan pt-28 agar tag-tag pilihan di atas tidak tertutup tombol kembali di HP
     <main className="min-h-screen bg-teal-50 p-4 pt-28 md:p-6 md:pt-24 relative overflow-x-hidden overflow-y-auto font-sans flex flex-col items-center">
-      
-      {/* Tombol Kembali (left-4 untuk HP) */}
-      <button 
-        onClick={tanganiKembali} 
-        className="absolute top-6 left-4 md:left-6 z-50 bg-white border-4 border-slate-900 px-4 py-2 rounded-xl font-black text-slate-900 shadow-[4px_4px_0_0_rgba(15,23,42,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all flex items-center gap-2 cursor-pointer"
-      >
+      <button onClick={tanganiKembali} className="absolute top-6 left-4 md:left-6 z-50 bg-white border-4 border-slate-900 px-4 py-2 rounded-xl font-black text-slate-900 shadow-[4px_4px_0_0_rgba(15,23,42,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all flex items-center gap-2 cursor-pointer">
         <span>⬅️</span> <span className="hidden md:inline">Ganti Bab</span>
       </button>
 
       <div className="w-full max-w-4xl z-10 mt-4 md:mt-0">
-        
         <div className="text-center mb-10">
           <div className="flex flex-wrap justify-center gap-2 mb-4">
             <span className="bg-pink-200 border-4 border-slate-900 px-3 py-1 rounded-xl font-black text-slate-900 text-xs md:text-sm shadow-[2px_2px_0_0_rgba(15,23,42,1)]">🎓 {jenjang}</span>
@@ -84,7 +78,6 @@ function SubBabContent() {
             ))}
           </div>
         )}
-
       </div>
     </main>
   );

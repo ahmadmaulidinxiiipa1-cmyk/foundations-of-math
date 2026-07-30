@@ -19,7 +19,8 @@ function BabContent() {
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "materi_belajar"), (snapshot) => {
       const data = snapshot.docs.map(doc => doc.data());
-      const materiSesuaiMetode = data.filter(m => m.format === metode);
+      // Menyaring materi yang sesuai metode DAN berstatus Aktif
+      const materiSesuaiMetode = data.filter(m => m.format === metode && (m.status === "Aktif" || !m.status));
       setMateriList(materiSesuaiMetode);
       setLoading(false);
     });
@@ -40,19 +41,12 @@ function BabContent() {
   };
 
   return (
-    // Menggunakan pt-28 agar konten turun dan aman dari tombol kembali di HP
     <main className="min-h-screen bg-blue-50 p-4 pt-28 md:p-6 md:pt-24 relative overflow-x-hidden overflow-y-auto font-sans flex flex-col items-center">
-      
-      {/* Tombol Kembali (left-4 untuk HP) */}
-      <button 
-        onClick={tanganiKembali} 
-        className="absolute top-6 left-4 md:left-6 z-50 bg-white border-4 border-slate-900 px-4 py-2 rounded-xl font-black text-slate-900 shadow-[4px_4px_0_0_rgba(15,23,42,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all flex items-center gap-2 cursor-pointer"
-      >
+      <button onClick={tanganiKembali} className="absolute top-6 left-4 md:left-6 z-50 bg-white border-4 border-slate-900 px-4 py-2 rounded-xl font-black text-slate-900 shadow-[4px_4px_0_0_rgba(15,23,42,1)] active:translate-y-1 active:translate-x-1 active:shadow-none transition-all flex items-center gap-2 cursor-pointer">
         <span>⬅️</span> <span className="hidden md:inline">Ganti Metode</span>
       </button>
 
       <div className="w-full max-w-4xl z-10 mt-4 md:mt-0">
-        
         <div className="text-center mb-8">
           <div className="flex flex-wrap justify-center gap-2 mb-4">
             <span className="bg-pink-200 border-4 border-slate-900 px-3 py-1 rounded-xl font-black text-slate-900 text-sm shadow-[2px_2px_0_0_rgba(15,23,42,1)]">🎓 {jenjang}</span>
@@ -64,13 +58,7 @@ function BabContent() {
 
         <div className="mb-8 relative max-w-xl mx-auto">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-2xl">🔍</div>
-          <input 
-            type="text" 
-            value={kataKunci}
-            onChange={(e) => setKataKunci(e.target.value)}
-            placeholder="Cari bab matematika..." 
-            className="w-full pl-12 pr-4 py-4 rounded-2xl border-4 border-slate-900 bg-white focus:outline-none focus:border-blue-500 font-black text-lg shadow-[6px_6px_0_0_rgba(15,23,42,1)]"
-          />
+          <input type="text" value={kataKunci} onChange={(e) => setKataKunci(e.target.value)} placeholder="Cari bab matematika..." className="w-full pl-12 pr-4 py-4 rounded-2xl border-4 border-slate-900 bg-white focus:outline-none focus:border-blue-500 font-black text-lg shadow-[6px_6px_0_0_rgba(15,23,42,1)]" />
         </div>
 
         {loading ? (
@@ -92,7 +80,6 @@ function BabContent() {
             ))}
           </div>
         )}
-
       </div>
     </main>
   );
