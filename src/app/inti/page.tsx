@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect, Suspense } from "react";
 import { db } from "@/lib/firebase";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, addDoc, query, where, orderBy } from "firebase/firestore";
 
 function IntiContent() {
   const router = useRouter();
@@ -17,17 +17,52 @@ function IntiContent() {
   const [materi, setMateri] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [porsi, setPorsi] = useState("Sedang"); 
+  
+  // STATE KOMENTAR
+  const [komentarList, setKomentarList] = useState<any[]>([]);
+  const [namaKomentar, setNamaKomentar] = useState("");
+  const [isiKomentar, setIsiKomentar] = useState("");
+  const [isSubmittingKomentar, setIsSubmittingKomentar] = useState(false);
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "materi_belajar"), (snapshot) => {
-      const data = snapshot.docs.map(doc => doc.data());
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...(doc.data() as any) }));
       // Filter super ketat: pastikan materi tersebut Aktif
-      const materiDitemukan = data.find(m => m.format === metode && m.mapel === bab && (m.bab || "Umum") === subbab && (m.status === "Aktif" || !m.status));
+      const materiDitemukan = data.find((m: any) => m.format === metode && m.mapel === bab && (m.bab || "Umum") === subbab && (m.status === "Aktif" || !m.status));
       setMateri(materiDitemukan || null);
       setLoading(false);
     });
     return () => unsub();
   }, [metode, bab, subbab]);
+
+  useEffect(() => {
+    if (!materi || !materi.id) return;
+    const q = query(collection(db, "komentar_materi"), where("id_materi", "==", materi.id), orderBy("tanggal", "desc"));
+    const unsub = onSnapshot(q, (snapshot) => {
+      setKomentarList(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+    return () => unsub();
+  }, [materi]);
+
+  const kirimKomentar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!namaKomentar || !isiKomentar || !materi) return;
+    setIsSubmittingKomentar(true);
+    try {
+      await addDoc(collection(db, "komentar_materi"), {
+        id_materi: materi.id,
+        nama: namaKomentar,
+        pesan: isiKomentar,
+        tanggal: new Date().toISOString()
+      });
+      setNamaKomentar("");
+      setIsiKomentar("");
+    } catch (error) {
+      alert("Gagal mengirim komentar.");
+    } finally {
+      setIsSubmittingKomentar(false);
+    }
+  };
 
   const dapatkanEmbedYoutube = (url: string) => {
     if (!url) return "";
@@ -127,6 +162,67 @@ function IntiContent() {
             </a>
           </div>
         </div>
+
+        {/* --- BAGIAN KOMENTAR / DISKUSI (BARU!) --- */}
+        <div className="bg-sky-100 border-4 border-slate-900 p-6 rounded-3xl shadow-[8px_8px_0_0_rgba(15,23,42,1)] mt-8">
+          <h2 className="text-xl md:text-2xl font-black text-slate-900 mb-2 flex items-center gap-2">
+            <span>💬</span> Ruang Diskusi
+          </h2>
+          <p className="font-bold text-slate-600 text-xs md:text-sm mb-6 leading-relaxed">
+            Punya pertanyaan seputar materi ini? Yuk, tanyakan di sini!
+          </p>
+
+          <form onSubmit={kirimKomentar} className="bg-white border-4 border-slate-900 p-4 rounded-2xl mb-6 shadow-[4px_4px_0_0_rgba(15,23,42,1)] flex flex-col gap-3">
+            <input 
+              type="text" 
+              placeholder="Nama Panggilanmu" 
+              value={namaKomentar} 
+              onChange={(e) => setNamaKomentar(e.target.value)} 
+              required 
+              className="w-full p-3 rounded-xl border-2 border-slate-900 bg-slate-50 font-bold outline-none focus:bg-white"
+            />
+            <textarea 
+              placeholder="Tulis pertanyaan atau tanggapanmu..." 
+              value={isiKomentar} 
+              onChange={(e) => setIsiKomentar(e.target.value)} 
+              required 
+              rows={3}
+              className="w-full p-3 rounded-xl border-2 border-slate-900 bg-slate-50 font-bold outline-none focus:bg-white resize-none"
+            ></textarea>
+            <button 
+              type="submit" 
+              disabled={isSubmittingKomentar}
+              className="w-full md:w-auto self-end bg-blue-400 hover:bg-blue-500 text-slate-900 font-black px-6 py-3 rounded-xl border-4 border-slate-900 shadow-[4px_4px_0_0_rgba(15,23,42,1)] active:shadow-none active:translate-y-1 transition-all text-sm"
+            >
+              {isSubmittingKomentar ? "Mengirim..." : "Kirim 🚀"}
+            </button>
+          </form>
+
+          <div className="space-y-4">
+            {komentarList.length === 0 ? (
+              <div className="text-center py-6 font-bold text-slate-500 bg-white border-2 border-dashed border-slate-400 rounded-2xl">
+                Belum ada komentar. Jadilah yang pertama bertanya! 🙋‍♂️
+              </div>
+            ) : (
+              komentarList.map((k) => (
+                <div key={k.id} className="bg-white border-2 border-slate-900 p-4 rounded-2xl shadow-[3px_3px_0_0_rgba(15,23,42,1)]">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg border-2 border-blue-200 text-xs md:text-sm">
+                      👤 {k.nama}
+                    </span>
+                    <span className="text-[10px] md:text-xs font-bold text-slate-400">
+                      {new Date(k.tanggal).toLocaleDateString("id-ID", { day: 'numeric', month: 'short' })}
+                    </span>
+                  </div>
+                  <p className="font-bold text-slate-700 text-sm md:text-base leading-relaxed whitespace-pre-wrap">
+                    "{k.pesan}"
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
       </div>
     </main>
   );

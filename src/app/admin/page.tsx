@@ -32,6 +32,11 @@ export default function AdminPage() {
   const [tabStatus, setTabStatus] = useState("Aktif");
   const [filterJenjang, setFilterJenjang] = useState("Semua");
   const [filterFormat, setFilterFormat] = useState("Semua");
+  
+  // STATE PENGUMUMAN
+  const [pengumumanTeks, setPengumumanTeks] = useState("");
+  const [pengumumanLink, setPengumumanLink] = useState("");
+  const [pengumumanAktif, setPengumumanAktif] = useState(false);
 
   const daftarMapel = ["Aljabar", "Kalkulus", "Trigonometri", "Statistika", "Geometri", "Bilangan", "Peluang", "Vektor & Matriks", "Logika"];
   
@@ -55,8 +60,16 @@ export default function AdminPage() {
     const unsubPesan = onSnapshot(query(collection(db, "pesan_masuk"), orderBy("tanggal", "desc")), (snapshot) => {
       setPesanList(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
+    const unsubPengumuman = onSnapshot(doc(db, "pengaturan", "pengumuman"), (docSnap) => {
+      if (docSnap.exists()) {
+        const d = docSnap.data();
+        setPengumumanTeks(d.teks || "");
+        setPengumumanLink(d.link || "");
+        setPengumumanAktif(d.aktif || false);
+      }
+    });
 
-    return () => { unsubMateri(); unsubVip(); unsubMedsos(); unsubPesan(); };
+    return () => { unsubMateri(); unsubVip(); unsubMedsos(); unsubPesan(); unsubPengumuman(); };
   }, [isAuthValid]);
 
   const simpanMateri = async (e: React.FormEvent) => {
@@ -78,6 +91,12 @@ export default function AdminPage() {
   const hapusPesan = async (id: string) => { if(confirm("Hapus pesan?")) await deleteDoc(doc(db, "pesan_masuk", id)); };
   const ubahKodeVip = async (e: React.FormEvent) => { e.preventDefault(); await setDoc(doc(db, "pengaturan", "vip"), { kode: kodeVipBaru }); alert("🎟️ VIP Diubah!"); setKodeVipBaru(""); };
   const simpanMedsos = async (e: React.FormEvent) => { e.preventDefault(); await setDoc(doc(db, "pengaturan", "medsos"), { youtube: ytLink, instagram: igLink, tiktok: ttLink, facebook: fbLink }); alert("📱 Medsos Diperbarui!"); };
+  
+  const simpanPengumuman = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await setDoc(doc(db, "pengaturan", "pengumuman"), { teks: pengumumanTeks, link: pengumumanLink, aktif: pengumumanAktif });
+    alert("📢 Pengumuman Diperbarui!");
+  };
   
   const salinLink = (linkMateri: string) => {
     navigator.clipboard.writeText(linkMateri);
@@ -125,24 +144,67 @@ export default function AdminPage() {
       {layarAktif === "Dashboard" ? (
         <div className="max-w-7xl mx-auto space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-1 space-y-6">
+            <div className="lg:col-span-1 space-y-4">
+              {/* Stat Cards */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-blue-400 border-4 border-slate-900 p-4 rounded-2xl shadow-[4px_4px_0_0_rgba(15,23,42,1)] text-center">
+                  <p className="text-3xl font-black text-slate-900">{materiList.filter(m => (m.status || "Aktif") === "Aktif").length}</p>
+                  <p className="text-xs font-black text-slate-900 mt-1">📚 Materi Aktif</p>
+                </div>
+                <div className="bg-orange-300 border-4 border-slate-900 p-4 rounded-2xl shadow-[4px_4px_0_0_rgba(15,23,42,1)] text-center">
+                  <p className="text-3xl font-black text-slate-900">{pesanList.length}</p>
+                  <p className="text-xs font-black text-slate-900 mt-1">📥 Pesan Masuk</p>
+                </div>
+              </div>
+
               <div className="bg-pink-100 border-4 border-slate-900 p-5 rounded-2xl shadow-[6px_6px_0_0_rgba(15,23,42,1)]">
-                <h2 className="text-lg font-black text-slate-900 mb-1">🎟️ Sandi Gerbang VIP</h2>
-                <form onSubmit={ubahKodeVip} className="flex gap-2 mt-3">
-                  <input type="text" value={kodeVipBaru} onChange={(e) => setKodeVipBaru(e.target.value)} placeholder={kodeVipAktif} className="w-full p-2.5 text-sm rounded-xl border-4 border-slate-900 bg-white font-bold outline-none" />
-                  <button type="submit" className="bg-pink-400 text-slate-900 font-black px-4 rounded-xl border-4 border-slate-900">UBAH</button>
+                <h2 className="text-sm font-black text-slate-900 mb-1">🎟️ Sandi Gerbang VIP</h2>
+                <p className="text-xs font-bold text-slate-500 mb-2">Aktif: <span className="font-black text-pink-600">{kodeVipAktif}</span></p>
+                <form onSubmit={ubahKodeVip} className="flex gap-2">
+                  <input type="text" value={kodeVipBaru} onChange={(e) => setKodeVipBaru(e.target.value)} placeholder="Sandi baru..." className="w-full p-2.5 text-sm rounded-xl border-4 border-slate-900 bg-white font-bold outline-none" required />
+                  <button type="submit" className="bg-pink-400 text-slate-900 font-black px-4 rounded-xl border-4 border-slate-900 flex-shrink-0">UBAH</button>
                 </form>
               </div>
+
+              <div className="bg-yellow-200 border-4 border-slate-900 p-5 rounded-2xl shadow-[6px_6px_0_0_rgba(15,23,42,1)]">
+                <h2 className="text-sm font-black text-slate-900 mb-1">📢 Papan Pengumuman</h2>
+                <form onSubmit={simpanPengumuman} className="flex flex-col gap-2 mt-2">
+                  <textarea value={pengumumanTeks} onChange={(e) => setPengumumanTeks(e.target.value)} placeholder="Isi pengumuman..." className="w-full p-2.5 text-sm rounded-xl border-4 border-slate-900 bg-white font-bold outline-none resize-none" rows={2}></textarea>
+                  <input type="text" value={pengumumanLink} onChange={(e) => setPengumumanLink(e.target.value)} placeholder="Link URL (opsional)" className="w-full p-2 text-sm rounded-xl border-2 border-slate-900 bg-white font-bold outline-none" />
+                  <div className="flex items-center gap-2 mt-1">
+                    <input type="checkbox" checked={pengumumanAktif} onChange={(e) => setPengumumanAktif(e.target.checked)} className="w-4 h-4 cursor-pointer" id="chkAktif" />
+                    <label htmlFor="chkAktif" className="text-xs font-black cursor-pointer">Tampilkan di Dasbor</label>
+                  </div>
+                  <button type="submit" className="bg-yellow-400 text-slate-900 font-black px-4 py-2 mt-1 rounded-xl border-4 border-slate-900 w-full text-sm">SIMPAN PENGUMUMAN</button>
+                </form>
+              </div>
+
+              <div className="bg-sky-100 border-4 border-slate-900 p-5 rounded-2xl shadow-[6px_6px_0_0_rgba(15,23,42,1)]">
+                <h2 className="text-sm font-black text-slate-900 mb-3">📱 Link Media Sosial</h2>
+                <form onSubmit={simpanMedsos} className="space-y-2">
+                  <input type="url" value={ytLink} onChange={(e) => setYtLink(e.target.value)} placeholder="🎬 YouTube" className="w-full p-2 text-xs rounded-xl border-2 border-slate-900 bg-white font-bold outline-none" />
+                  <input type="url" value={igLink} onChange={(e) => setIgLink(e.target.value)} placeholder="📸 Instagram" className="w-full p-2 text-xs rounded-xl border-2 border-slate-900 bg-white font-bold outline-none" />
+                  <input type="url" value={ttLink} onChange={(e) => setTtLink(e.target.value)} placeholder="🎵 TikTok" className="w-full p-2 text-xs rounded-xl border-2 border-slate-900 bg-white font-bold outline-none" />
+                  <input type="url" value={fbLink} onChange={(e) => setFbLink(e.target.value)} placeholder="👥 Facebook" className="w-full p-2 text-xs rounded-xl border-2 border-slate-900 bg-white font-bold outline-none" />
+                  <button type="submit" className="w-full bg-sky-400 text-slate-900 font-black px-4 py-2 rounded-xl border-4 border-slate-900 text-sm">SIMPAN MEDSOS</button>
+                </form>
+              </div>
+
               <div className="bg-emerald-100 border-4 border-slate-900 p-5 rounded-2xl shadow-[6px_6px_0_0_rgba(15,23,42,1)]">
-                <h2 className="text-lg font-black text-slate-900 mb-3">📥 Pesan Siswa ({pesanList.length})</h2>
+                <h2 className="text-sm font-black text-slate-900 mb-3">📥 Pesan Siswa ({pesanList.length})</h2>
                 <div className="space-y-3 overflow-y-auto max-h-[250px] pr-1">
-                  {pesanList.map((p) => (
-                    <div key={p.id} className="bg-white border-2 border-slate-900 p-3 rounded-xl relative">
-                      <button onClick={() => hapusPesan(p.id)} className="absolute top-2 right-2 text-xs font-black text-red-500">✕</button>
-                      <p className="text-xs font-black text-pink-600">👤 {p.nama}</p>
-                      <p className="text-xs font-bold text-slate-800 mt-1">"{p.pesan}"</p>
-                    </div>
-                  ))}
+                  {pesanList.length === 0 ? (
+                    <p className="text-xs font-bold text-slate-400 text-center py-4">Belum ada pesan masuk.</p>
+                  ) : (
+                    pesanList.map((p) => (
+                      <div key={p.id} className="bg-white border-2 border-slate-900 p-3 rounded-xl relative">
+                        <button onClick={() => hapusPesan(p.id)} className="absolute top-2 right-2 text-xs font-black text-red-500 hover:text-red-700">✕</button>
+                        <p className="text-xs font-black text-pink-600">👤 {p.nama}</p>
+                        <p className="text-xs font-bold text-slate-500">{p.email}</p>
+                        <p className="text-xs font-bold text-slate-800 mt-1">"{p.pesan}"</p>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>
